@@ -245,7 +245,7 @@ void XDLType::readMeta(XDLCompiler* compiler, Buffer& in, uint32_t count,
       case DataType::LIST8: {
         uint8_t len = in.readU8();  // get the length of the list
         string listType =
-            in.readString8();  // get the name of the type of each element
+					in.readString8();  // get the name of the type of each element
         s->addSymCheckDup(name, new GenericList(name, len, listType));
         //  s->addMember(DataType::List8, memberName)
         // uint8_t numElements = in.readU8();

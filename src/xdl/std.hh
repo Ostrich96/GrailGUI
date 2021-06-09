@@ -56,7 +56,7 @@ class XDLType {
   uint32_t nameOffset;
   static DynArray<const XDLType*> types;
   static DynArray<std::string> typeNames;  // the list of all unique names in the system
-  static std::unordered_map<std::string, uint32_t> byName;
+  static HashMap<uint32_t> byName;
   static void addType(const XDLType* type);
 
  public:

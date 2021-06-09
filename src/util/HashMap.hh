@@ -37,7 +37,7 @@ protected:
 	}
   HashMapBase(uint32_t sz, uint32_t symbolSize) :
     size(sz), symbolSize(symbolSize), table(new uint32_t[sz]) {
-    size--;
+    size--; // size is actually size-1 so AND not mod, and remember this! if you need to alloocate new table[size+1]
 		symbols = new char[symbolSize];
   }
 public:
