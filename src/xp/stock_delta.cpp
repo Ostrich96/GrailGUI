@@ -19,7 +19,8 @@ class Stock {
   uint16_t high_delta;
   uint16_t low_delta;
   uint16_t close_delta;
-  uint16_t volume_approximate;
+  int8_t vol_log;
+  int16_t volume_approximate;
   bool empty_stock : 1;
   bool first_day : 1;
 
@@ -43,10 +44,11 @@ class Stock {
     if (t.first_day) {
       return o << setprecision(5) << t.open_price << " " << t.high_delta << " "
                << t.low_delta << " " << t.close_delta << " "
-               << t.volume_approximate << '\n';
+               << t.volume_approximate << " " << (int)t.vol_log << '\n';
     } else {
       return o << t.open_delta << " " << t.high_delta << " " << t.low_delta
-               << " " << t.close_delta << " " << t.volume_approximate << '\n';
+               << " " << t.close_delta << " " << t.volume_approximate << " "
+               << (int)t.vol_log << '\n';
     }
   }
 
@@ -78,17 +80,20 @@ class Stock {
     double high_delta_double = high - open_price;
     double low_delta_double = open_price - low;
     double close_delta_double = close - low;
+    int64_t vol_delta = (!prev_day) ? volume : volume - prev_day->get_vol();
     int decimal = 5;
     open_delta = open_delta_double * pow(10, decimal);
     high_delta = high_delta_double * pow(10, decimal);
     low_delta = low_delta_double * pow(10, decimal);
     close_delta = close_delta_double * pow(10, decimal);
-    volume_approximate = volume / 10000;
+
+    vol_log = ceil(log10(abs(vol_delta))) - 3;
+    volume_approximate = (int64_t(vol_delta / pow(10, vol_log)) << 4) + vol_log;
   }
 
   float get_close_price() { return close; }
   bool isEmpty() { return empty_stock; }
-
+  uint64_t get_vol() { return volume; }
   // Writes stock out to ostream as bits to be read in later
   friend void binwrite(ofstream& o, const Stock& s) {
     if (s.first_day)  // write base price if first_day, else write delta
@@ -135,6 +140,9 @@ class Compress_stock {
     ofstream stream(filename, ios::binary);
     for (const auto& elem : c.stocks) {
       binwrite(stream, elem);
+    }
+    for (const auto& elem : c.stocks) {
+      writelow(stream, elem);
     }
   }
 };
