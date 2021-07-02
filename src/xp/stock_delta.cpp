@@ -91,20 +91,13 @@ class Stock {
     volume_approximate = volume / 10000;
   }
   int digit_count(double open_price) {
+    int significant_bit = 5;
     int count = 0;
     int k = (int)open_price;
-    if (k >= 10000)
-      return 0;
-    else if (k >= 1000)
-      return 1;
-    else if (k >= 100)
-      return 2;
-    else if (k >= 10)
-      return 3;
-    else if (k >= 1)
-      return 4;
-    else
-      return 5;
+    while (k > pow(10, count)) {
+      count++;
+    }
+    return significant_bit - count;
   }
   float get_close_price() { return close; }
   bool isEmpty() { return empty_stock; }
