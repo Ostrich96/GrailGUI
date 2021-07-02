@@ -20,7 +20,8 @@ class Stock {
   uint16_t high_delta;
   uint16_t low_delta;
   uint16_t close_delta;
-  uint16_t volume_approximate;
+  int8_t vol_log;
+  int16_t volume_approximate;
   bool empty_stock : 1;
   bool first_day : 1;
 
@@ -44,10 +45,11 @@ class Stock {
     if (t.first_day) {
       return o << setprecision(5) << t.open_price << " " << t.high_delta << " "
                << t.low_delta << " " << t.close_delta << " "
-               << t.volume_approximate << '\n';
+               << t.volume_approximate << " " << (int)t.vol_log << '\n';
     } else {
       return o << t.open_delta << " " << t.high_delta << " " << t.low_delta
-               << " " << t.close_delta << " " << t.volume_approximate << '\n';
+               << " " << t.close_delta << " " << t.volume_approximate << " "
+               << (int)t.vol_log << '\n';
     }
   }
 
@@ -75,6 +77,7 @@ class Stock {
     // Since prev_day defaults to null, check if it exists
     double prev_day_close =
         (!prev_day) ? open_price : prev_day->get_close_price();
+
     decimal = digit_count(open_price);
     double open_delta_double = (int)(open_price * pow(10, decimal)) -
                                (int)(prev_day_close * pow(10, decimal));
@@ -101,7 +104,7 @@ class Stock {
   }
   float get_close_price() { return close; }
   bool isEmpty() { return empty_stock; }
-
+  uint64_t get_vol() { return volume; }
   // Writes stock out to ostream as bits to be read in later
   friend void binwrite(ofstream& o, const Stock& s) {
     if (s.first_day)  // write base price if first_day, else write delta
@@ -148,6 +151,9 @@ class Compress_stock {
     ofstream stream(filename, ios::binary);
     for (const auto& elem : c.stocks) {
       binwrite(stream, elem);
+    }
+    for (const auto& elem : c.stocks) {
+      writelow(stream, elem);
     }
   }
 };
