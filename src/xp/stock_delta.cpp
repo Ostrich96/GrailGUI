@@ -90,6 +90,8 @@ class Stock {
     close_delta = close_delta_double;
     volume_approximate = volume / 10000;
   }
+
+  // determine the decimal of the open_price
   int digit_count(double open_price) {
     int significant_bit = 5;
     int count = 0;
@@ -99,6 +101,7 @@ class Stock {
     }
     return significant_bit - count;
   }
+
   float get_close_price() { return close; }
   bool isEmpty() { return empty_stock; }
 
