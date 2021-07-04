@@ -14,12 +14,14 @@ class Stock {
   float high;
   float low;
   float close;
+  uint8_t decimal;
   uint64_t volume;
   int16_t open_delta;  // Convert to signed int, instead of using neg bit
   uint16_t high_delta;
   uint16_t low_delta;
   uint16_t close_delta;
-  uint16_t volume_approximate;
+  int8_t vol_log;
+  int16_t volume_approximate;
   bool empty_stock : 1;
   bool first_day : 1;
 
@@ -43,10 +45,11 @@ class Stock {
     if (t.first_day) {
       return o << setprecision(5) << t.open_price << " " << t.high_delta << " "
                << t.low_delta << " " << t.close_delta << " "
-               << t.volume_approximate << '\n';
+               << t.volume_approximate << " " << (int)t.vol_log << '\n';
     } else {
       return o << t.open_delta << " " << t.high_delta << " " << t.low_delta
-               << " " << t.close_delta << " " << t.volume_approximate << '\n';
+               << " " << t.close_delta << " " << t.volume_approximate << " "
+               << (int)t.vol_log << '\n';
     }
   }
 
@@ -74,21 +77,37 @@ class Stock {
     // Since prev_day defaults to null, check if it exists
     double prev_day_close =
         (!prev_day) ? open_price : prev_day->get_close_price();
-    double open_delta_double = open_price - prev_day_close;
-    double high_delta_double = high - open_price;
-    double low_delta_double = open_price - low;
-    double close_delta_double = close - low;
-    int decimal = 5;
-    open_delta = open_delta_double * pow(10, decimal);
-    high_delta = high_delta_double * pow(10, decimal);
-    low_delta = low_delta_double * pow(10, decimal);
-    close_delta = close_delta_double * pow(10, decimal);
+
+    decimal = digit_count(open_price);
+    double open_delta_double = (int)(open_price * pow(10, decimal)) -
+                               (int)(prev_day_close * pow(10, decimal));
+    double high_delta_double =
+        (int)(high * pow(10, decimal)) - (int)(open_price * pow(10, decimal));
+    double low_delta_double =
+        (int)(open_price * pow(10, decimal)) - (int)(low * pow(10, decimal));
+    double close_delta_double =
+        (int)(close * pow(10, decimal)) - (int)(low * pow(10, decimal));
+    open_delta = open_delta_double;
+    high_delta = high_delta_double;
+    low_delta = low_delta_double;
+    close_delta = close_delta_double;
     volume_approximate = volume / 10000;
+  }
+
+  // determine the decimal of the open_price
+  int digit_count(double open_price) {
+    int significant_bit = 5;
+    int count = 0;
+    int k = (int)open_price;
+    while (k > pow(10, count)) {
+      count++;
+    }
+    return significant_bit - count;
   }
 
   float get_close_price() { return close; }
   bool isEmpty() { return empty_stock; }
-
+  uint64_t get_vol() { return volume; }
   // Writes stock out to ostream as bits to be read in later
   friend void binwrite(ofstream& o, const Stock& s) {
     if (s.first_day)  // write base price if first_day, else write delta
@@ -136,12 +155,15 @@ class Compress_stock {
     for (const auto& elem : c.stocks) {
       binwrite(stream, elem);
     }
+    for (const auto& elem : c.stocks) {
+      writelow(stream, elem);
+    }
   }
 };
 
 int main() {
   const Compress_stock c("aapl.txt");
-  ofstream outfile("aapl_delta.txt");
+  ofstream outfile("aapl_delta_digit.txt");
   outfile << c;
-  binwrite("aapl_delta.bin", c);
+  binwrite("aapl_delta_digit.bin", c);
 }
