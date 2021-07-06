@@ -4,6 +4,8 @@
   "editor.formatOnSave": true,
   "files.associations": {
     "cstring": "cpp",
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "iostream": "cpp",
+    "iomanip": "cpp"
   }
 }
