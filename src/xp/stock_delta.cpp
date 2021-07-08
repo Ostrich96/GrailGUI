@@ -44,11 +44,10 @@ class Stock {
     if (t.first_day) {
       return o << setprecision(5) << t.open_price << " " << t.high_delta << " "
                << t.low_delta << " " << t.close_delta << " "
-               << t.volume_approximate << " " << (int)t.vol_log << '\n';
+               << t.volume_approximate << '\n';
     } else {
       return o << t.open_delta << " " << t.high_delta << " " << t.low_delta
-               << " " << t.close_delta << " " << t.volume_approximate << " "
-               << (int)t.vol_log << '\n';
+               << " " << t.close_delta << " " << t.volume_approximate << '\n';
     }
   }
 
@@ -81,7 +80,7 @@ class Stock {
     double low_delta_double = open_price - low;
     double close_delta_double = close - low;
     int64_t vol_delta = (!prev_day) ? volume : volume - prev_day->get_vol();
-    int decimal = 5;
+    int decimal = 4;
     open_delta = open_delta_double * pow(10, decimal);
     high_delta = high_delta_double * pow(10, decimal);
     low_delta = low_delta_double * pow(10, decimal);
@@ -89,8 +88,29 @@ class Stock {
 
     vol_log = ceil(log10(abs(vol_delta))) - 3;
     volume_approximate = (int64_t(vol_delta / pow(10, vol_log)) << 4) + vol_log;
-  }
-
+  };
+  static bool approxEqual(float a, float b, float eps) {
+    return abs(b - a) < eps;
+  };
+  static bool reportError(const Stock& s1, const Stock& s2, float eps1,
+                          float eps2) {
+    bool ok = true;
+    if (!(ok &= approxEqual(s1.open_price, s2.open_price, eps1))) {
+      std::cerr << "error:" << s1.open_price << " " << s2.open_price;
+    };
+    if (!(ok &= approxEqual(s1.high, s2.high, eps1))) {
+      std::cerr << "error:" << s1.high << " " << s2.high;
+    };
+    if (!(ok &= approxEqual(s1.low, s2.low, eps1))) {
+      std::cerr << "error:" << s1.low << " " << s2.low;
+    };
+    if (!(ok &= approxEqual(s1.close, s2.close, eps1))) {
+      std::cerr << "error:" << s1.close << " " << s2.close;
+    };
+    if (!(ok &= approxEqual(s1.volume, s2.volume, eps2))) {
+      std::cerr << "error:" << s1.volume << " " << s2.volume;
+    };
+  };
   float get_close_price() { return close; }
   bool isEmpty() { return empty_stock; }
   uint64_t get_vol() { return volume; }
@@ -141,12 +161,8 @@ class Compress_stock {
     for (const auto& elem : c.stocks) {
       binwrite(stream, elem);
     }
-    for (const auto& elem : c.stocks) {
-      writelow(stream, elem);
-    }
   }
 };
-
 int main() {
   const Compress_stock c("aapl.txt");
   ofstream outfile("aapl_delta.txt");

@@ -79,22 +79,24 @@ class DeltaEncodeStock {
   friend std::ostream& operator<<(std::ostream& o, const DeltaEncodeStock& d) {
     o << d.open << " " << d.high << " " << d.low << " " << d.close;
     return o;
-    void write() {
-      
-    }
   };
 };
 
 int testStockDelta(const char filename[]) {
   std::ifstream f(filename);
   Stock s;
-  std::vector<Stock> stocks;
+  std::vector<DeltaEncodeStock> DeltaEncodeStocks;
   while (f >> s) {
-    if (stocks.size() > 0) {
-      DeltaEncodeStock d(s, &stocks[stocks.size() - 1]);
+    if (DeltaEncodeStocks.size() > 0) {
+      DeltaEncodeStock d(s, &DeltaEncodeStocks[DeltaEncodeStocks.size() - 1]);
     } else {
       DeltaEncodeStock d(s);
     };
-    stocks.push_back(d);
+    DeltaEncodeStocks.push_back(d);
   }
+}
+
+
+int main(){
+  
 }
